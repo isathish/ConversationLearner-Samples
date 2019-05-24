@@ -64,6 +64,15 @@ jobs:
       - run: cd ../cl-ui && npm ci
       - run: cd ../cl-ui && npm run cypress -- run --record false --spec  "cypress/integration/smoke/**/*.spec.*" --config "baseUrl=http://localhost:3978"
 
+      - store_artifacts:
+          path: results
+
+      - store_artifacts:
+          path: cl-ui/cypress/videos
+
+      - store_artifacts:
+          path: cl-ui/cypress/screenshots
+
 workflows:
   build-test:
     jobs:
