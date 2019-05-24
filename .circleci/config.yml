@@ -62,7 +62,7 @@ jobs:
       
       # Install and build sample Bot application
       - run: cd ../cl-ui && npm ci
-      - run: cd ../cl-ui && npm run cypress -- run --record false --spec  "cypress/integration/smoke/**/*.spec.*"
+      - run: cd ../cl-ui && npm run cypress -- run --record false --spec  "cypress/integration/smoke/**/*.spec.*" --config "baseUrl=http://localhost:3978"
 
 workflows:
   build-test:
