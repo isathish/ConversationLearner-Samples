@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
@@ -11,9 +11,10 @@ jobs:
 
       # Download and cache dependencies
       - restore_cache:
-          key: v1-deps-{{ .Branch }}-{{ checksum "package.json" }}
-          key: v1-deps-{{ .Branch }}
-          key: v1-deps
+          keys:
+            - v1-deps-{{ .Branch }}-{{ checksum "package.json" }}
+            - v1-deps-{{ .Branch }}
+            - v1-deps
       
       - run: node --version
       - run: npm --version
@@ -28,9 +29,45 @@ jobs:
       - run: npm run build
       - run: npm run test
 
+  test:
+    docker:
+      - image: cypress/node11.13.0-chrome73
+        environment:
+          ## this enables colors in the output
+          TERM: xterm
+          ipc: host ## https://github.com/cypress-io/cypress/issues/350
+    parallelism: 1
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-deps-{{ .Branch }}-{{ checksum "package.json" }}
+            - v1-deps-{{ .Branch }}
+            - v1-deps
+
+      - run: node --version
+      - run: npm --version
+      - run: npm ci
+
+      - save_cache:
+          key: v1-deps-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - ~/.npm
+            - ~/.cache
+
+      # Clone the Samples BOT
+      - run: git clone https://github.com/microsoft/ConversationLearner-UI -b mattm/smoke-test ../cl-ui
+      
+      # Install and build sample Bot application
+      - run: cd ../cl-ui && npm ci
+      - run: cd ../cl-ui && npm run cypress -- run --record false --spec  "cypress/integration/smoke/**/*.spec.*"
 
 workflows:
-  version: 2
-  build:
+  build-test:
     jobs:
       - build
+      - test:
+          requires:
+              - build
